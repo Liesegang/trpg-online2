@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# TRPG Online2
 
-## Getting Started
+TRPG Online2はオンラインで遊べるテーブルトークRPG（TRPG）のプロジェクトです。
 
-First, run the development server:
+## 概要
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+TRPG Online2は、プレイヤーが仮想のテーブル上でキャラクターを操作し、ダイスを振りながらストーリーを進めるTRPGです。オンライン上で他のプレイヤーと協力して冒険を楽しむことができます。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 特徴
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- オンラインでのプレイが可能
+- リアルタイムでのチャット機能
+- カスタマイズ可能なキャラクターシート
+- 豊富なダイスロール機能
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## インストール
 
-## Learn More
+以下の手順に従って、TRPG Online2をインストールしてください。
 
-To learn more about Next.js, take a look at the following resources:
+1. リポジトリをクローンする: `git clone https://github.com/your-username/trpg-online2.git`
+2. プロジェクトのディレクトリに移動する: `cd trpg-online2`
+3. 依存関係をインストールする: `npm install`
+4. アプリケーションを起動する: `npm start`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ライセンス
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+このプロジェクトはMITライセンスのもとで公開されています。詳細は[LICENSE](./LICENSE)ファイルを参照してください。
 
-## Deploy on Vercel
+## 連絡先
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+質問やフィードバックがある場合は、以下の連絡先までお気軽にご連絡ください。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- メール: your-email@example.com
+- Twitter: [@your-username](https://twitter.com/your-username)

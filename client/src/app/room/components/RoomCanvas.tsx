@@ -1,19 +1,20 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { scaleAtom } from '../Store';
-import { useAtom } from 'jotai';
+import { scaleAtom, selectionAtom } from '../Store';
+import { useAtom, useSetAtom } from 'jotai';
 
 interface PanZoomProps {
   children: React.ReactNode;
 }
 
-const RoomWrapper: React.FC<PanZoomProps> = ({ children }) => {
+const RoomCanvas: React.FC<PanZoomProps> = ({ children }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [scale, setScale] = useAtom(scaleAtom);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
   const origPos = useRef({ x: 0, y: 0 });
+  const setSelectedItem = useSetAtom(selectionAtom);
 
   const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -61,6 +62,11 @@ const RoomWrapper: React.FC<PanZoomProps> = ({ children }) => {
     setPosition({ x: newPosX, y: newPosY });
   }, [scale, setScale, position]);
 
+  const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setSelectedItem([]);
+  }, [setSelectedItem]);
+
   useEffect(() => {
     const wrapperRect = wrapperRef.current?.getBoundingClientRect();
     setPosition({ x: wrapperRect?.width ? wrapperRect.width / 2 : 0, y: wrapperRect?.height ? wrapperRect.height / 2 : 0 });
@@ -72,6 +78,7 @@ const RoomWrapper: React.FC<PanZoomProps> = ({ children }) => {
       className="relative overflow-hidden h-full w-full"
       onMouseDown={handleMouseDown}
       onWheel={handleWheel}
+      onClick={handleClick}
       style={{ cursor: 'cursor' }}
     >
       <div>
@@ -90,4 +97,4 @@ const RoomWrapper: React.FC<PanZoomProps> = ({ children }) => {
   );
 };
 
-export default RoomWrapper;
+export default RoomCanvas;

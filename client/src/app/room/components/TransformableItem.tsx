@@ -1,8 +1,8 @@
 'use client';
 
-import { useAtomValue } from 'jotai';
-import React, { useState, useCallback, useRef } from 'react';
-import { scaleAtom } from '../Store';
+import { useAtom, useAtomValue } from 'jotai';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { scaleAtom, selectionAtom } from '../Store';
 import clsx from 'clsx';
 
 type HandlePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center' | 'left-center' | 'right-center';
@@ -75,9 +75,11 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
 
 interface TransformableProps {
   children: React.ReactNode;
+  itemId: string;
 }
 
-const Transformable: React.FC<TransformableProps> = ({ children }) => {
+const TransformableItem: React.FC<TransformableProps> = ({ children, itemId }) => {
+  const [selectedItem, setSelectedItem] = useAtom(selectionAtom);
   const canvasScale = useAtomValue(scaleAtom);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
@@ -86,8 +88,12 @@ const Transformable: React.FC<TransformableProps> = ({ children }) => {
   const transformRef = useRef<HTMLDivElement>(null);
 
   const toggleHandles = useCallback(() => {
-    setShowHandles(!showHandles);
-  }, [showHandles]);
+    setSelectedItem([itemId]);
+  }, [itemId, setSelectedItem]);
+
+  useEffect(() => {
+    setShowHandles(selectedItem.includes(itemId));
+  }, [selectedItem, itemId]);
 
   const handleScale = useCallback((clientX: number, clientY: number) => {
     const origScale = scale;
@@ -124,6 +130,7 @@ const Transformable: React.FC<TransformableProps> = ({ children }) => {
 
     const onMouseMove = (e: MouseEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       const currentAngle = Math.atan2(e.clientY - position.y, e.clientX - position.x) * (180 / Math.PI);
       const targetAngle = origRotation + currentAngle - startRotation;
       if (e.shiftKey) {
@@ -145,6 +152,9 @@ const Transformable: React.FC<TransformableProps> = ({ children }) => {
   const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
+
+    setSelectedItem([itemId]);
+
     const startPos = { x: event.clientX, y: event.clientY };
     const origPos = { x: position.x, y: position.y };
 
@@ -165,7 +175,13 @@ const Transformable: React.FC<TransformableProps> = ({ children }) => {
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
-  }, [position, canvasScale]);
+  }, [position, canvasScale, setSelectedItem, itemId]);
+
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedItem([itemId]);
+  };
 
   return (
     <div
@@ -178,8 +194,8 @@ const Transformable: React.FC<TransformableProps> = ({ children }) => {
       style={{
         transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale})`,
       }}
-      onDoubleClick={toggleHandles}
       onMouseDown={handleMouseDown}
+      onClick={handleClick}
     >
       <div>
         {children}
@@ -192,4 +208,4 @@ const Transformable: React.FC<TransformableProps> = ({ children }) => {
   );
 };
 
-export default Transformable;
+export default TransformableItem;
