@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { scaleAtom, selectionAtom } from '../Store';
-import { useAtom, useSetAtom } from 'jotai';
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { scaleAtom, selectionAtom } from "../Store";
+import { useAtom, useSetAtom } from "jotai";
 
 interface PanZoomProps {
   children: React.ReactNode;
@@ -16,60 +16,72 @@ const RoomCanvas: React.FC<PanZoomProps> = ({ children }) => {
   const origPos = useRef({ x: 0, y: 0 });
   const setSelectedItem = useSetAtom(selectionAtom);
 
-  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    startPos.current = { x: event.clientX, y: event.clientY };
-    origPos.current = { x: position.x, y: position.y };
-
-    const handleMouseMove = (event: MouseEvent) => {
+  const handleMouseDown = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
       event.preventDefault();
       event.stopPropagation();
-      const dx = event.clientX - startPos.current.x;
-      const dy = event.clientY - startPos.current.y;
-      setPosition({
-        x: origPos.current.x + dx,
-        y: origPos.current.y + dy,
-      });
-    };
+      startPos.current = { x: event.clientX, y: event.clientY };
+      origPos.current = { x: position.x, y: position.y };
 
-    const handleMouseUp = (event: MouseEvent) => {
+      const handleMouseMove = (event: MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const dx = event.clientX - startPos.current.x;
+        const dy = event.clientY - startPos.current.y;
+        setPosition({
+          x: origPos.current.x + dx,
+          y: origPos.current.y + dy,
+        });
+      };
+
+      const handleMouseUp = (event: MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp, { once: true });
+    },
+    [position]
+  );
+
+  const handleWheel = useCallback(
+    (event: React.WheelEvent<HTMLDivElement>) => {
       event.preventDefault();
       event.stopPropagation();
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp, { once: true });
-  }, [position]);
+      const rect = wrapperRef.current?.getBoundingClientRect() || { left: 0, top: 0 };
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
 
-  const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
+      const scaleAdjust = scale * Math.pow(0.8, event.deltaY / 100);
+      const newScale = Math.min(Math.max(0.1, scaleAdjust), 10);
 
-    const rect = wrapperRef.current?.getBoundingClientRect() || { left: 0, top: 0 };
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
+      const newPosX = mouseX - (mouseX - position.x) * (newScale / scale);
+      const newPosY = mouseY - (mouseY - position.y) * (newScale / scale);
 
-    const scaleAdjust = scale * Math.pow(0.8, event.deltaY / 100);
-    const newScale = Math.min(Math.max(0.1, scaleAdjust), 10);
+      setScale(newScale);
+      setPosition({ x: newPosX, y: newPosY });
+    },
+    [scale, setScale, position]
+  );
 
-    const newPosX = mouseX - (mouseX - position.x) * (newScale / scale);
-    const newPosY = mouseY - (mouseY - position.y) * (newScale / scale);
-
-    setScale(newScale);
-    setPosition({ x: newPosX, y: newPosY });
-  }, [scale, setScale, position]);
-
-  const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setSelectedItem([]);
-  }, [setSelectedItem]);
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      setSelectedItem([]);
+    },
+    [setSelectedItem]
+  );
 
   useEffect(() => {
     const wrapperRect = wrapperRef.current?.getBoundingClientRect();
-    setPosition({ x: wrapperRect?.width ? wrapperRect.width / 2 : 0, y: wrapperRect?.height ? wrapperRect.height / 2 : 0 });
+    setPosition({
+      x: wrapperRect?.width ? wrapperRect.width / 2 : 0,
+      y: wrapperRect?.height ? wrapperRect.height / 2 : 0,
+    });
   }, []);
 
   return (
@@ -79,7 +91,7 @@ const RoomCanvas: React.FC<PanZoomProps> = ({ children }) => {
       onMouseDown={handleMouseDown}
       onWheel={handleWheel}
       onClick={handleClick}
-      style={{ cursor: 'cursor' }}
+      style={{ cursor: "cursor" }}
     >
       <div>
         {position.x}, {position.y}, {scale}
@@ -88,7 +100,7 @@ const RoomCanvas: React.FC<PanZoomProps> = ({ children }) => {
         className="absolute"
         style={{
           transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-          transformOrigin: 'center',
+          transformOrigin: "center",
         }}
       >
         {children}
