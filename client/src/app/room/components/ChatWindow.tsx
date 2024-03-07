@@ -1,29 +1,33 @@
 import React from "react";
 import { useState } from "react";
+import { io } from "socket.io-client";
 
 class ChatMessage {
   constructor(
-    public message: string,
-    public thumbnail: string
+    public username: string,
+    public message: string
   ) {}
 }
 
 const ChatWindow: React.FC = () => {
-  const [chats, setChats] = useState<ChatMessage[]>([
-    new ChatMessage("Hello, there!", "https://randomuser.me/api/portraits/thumb/men/75.jpg"),
-    new ChatMessage("Hi!", "https://randomuser.me/api/portraits/thumb/women/35.jpg"),
-    new ChatMessage("How are you?", "https://randomuser.me/api/portraits/thumb/men/75.jpg"),
-    new ChatMessage("I'm doing great!", "https://randomuser.me/api/portraits/thumb/women/35.jpg"),
-  ]);
+  const [chats, setChats] = useState<ChatMessage[]>([]);
   const messageInputRef = React.createRef<HTMLInputElement>();
+  const usernameRef = React.createRef<HTMLInputElement>();
+  const socket = io({ path: "/api/socket.io" });
+
+  socket.on("onMessage", (message: ChatMessage) => {
+    setChats([...chats, message]);
+  });
 
   const sendChat = () => {
-    if (messageInputRef.current) {
+    if (messageInputRef.current && usernameRef.current) {
       const message = new ChatMessage(
+        usernameRef.current.value,
         messageInputRef.current.value,
-        "https://randomuser.me/api/portraits/men/75.jpg"
       );
-      setChats([...chats, message]);
+      console.log(message);
+      socket.emit("newMessage", message);
+      messageInputRef.current.value = "";
     }
   };
 
@@ -33,19 +37,21 @@ const ChatWindow: React.FC = () => {
         <div className="flex flex-col space-y-4">
           {chats.map((chat, index) => (
             <div className="flex items-center space-x-2" key={index}>
-              <img
-                src={chat.thumbnail}
-                alt="User"
-                className="w-8 h-8 rounded-full"
-                width="200"
-                height="200"
-              />
+              <div className="font-bold">{chat.username}:</div>
               <div className="flex-1 bg-white rounded-lg p-2">
                 <p className="text-sm">{chat.message}</p>
               </div>
             </div>
           ))}
         </div>
+      </div>
+      <div className="flex items-center space-x-2 p-4">
+        <input
+          ref={usernameRef}
+          type="text"
+          className="flex-1 bg-gray-200 p-2 rounded-lg"
+          placeholder="Username"
+        />
       </div>
       <div className="flex items-center space-x-2 p-4">
         <input
