@@ -18,7 +18,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-mosaic-component": "^6.1.0",
-    "react-syntax-highlighter": "^15.5.0"
+    "react-syntax-highlighter": "^15.5.0",
+    "trpg-common": "file:../common"
   },
   "devDependencies": {
     "@types/node": "^20",
