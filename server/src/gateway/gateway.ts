@@ -5,7 +5,10 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
+
+import { DynamicLoader } from 'bcdice';
+import GameSystemClass from 'bcdice/lib/game_system';
 
 class ChatMessage {
   constructor(public username: string, public message: string) {}
@@ -16,7 +19,10 @@ export class Gateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
-  onModuleInit() {
+  loader: DynamicLoader;
+  gameSystem: GameSystemClass;
+
+  async onModuleInit() {
     this.server.on('connection', (socket) => {
       console.log(socket.id);
       console.log('connected!');
@@ -26,10 +32,18 @@ export class Gateway implements OnModuleInit {
       console.log(socket.id);
       console.log('disconnected!');
     });
+
+    this.loader = new DynamicLoader();
+    this.gameSystem = await this.loader.dynamicLoad('Cthulhu7th');
   }
 
   @SubscribeMessage('newMessage')
   onNewMessage(@MessageBody() body: ChatMessage) {
-    this.server.emit('onMessage', body);
+    const result = this.gameSystem.eval(body.message);
+    const retMessage = body.message + result?.text ? '\n' + result.text : '';
+    this.server.emit('onMessage', {
+      username: body.username,
+      message: retMessage,
+    });
   }
 }

@@ -17,49 +17,23 @@ import {
   MdOutlinePersonOutline,
 } from 'react-icons/md';
 import { IoDuplicateOutline } from 'react-icons/io5';
+import { useSyncedStore } from '@syncedstore/react';
 
-import { scaleAtom, selectionAtom } from '../store';
+import { scaleAtom, selectionAtom, store } from '../store';
 import TextItemComponent from './MapItemComponents/TextItemComponent';
 import CharacterItemComponent from './MapItemComponents/CharacterItemComponent';
 import BackgroundItemComponent from './MapItemComponents/BackgroundItemComponent';
 import PinItemComponent from './MapItemComponents/PinItemComponent';
 
-import { Character, Attribute } from 'trpg-common';
-
-interface MapItem {
-  id: string;
-  position: {
-    x: number;
-    y: number;
-  };
-  rotation: number;
-  scale: {
-    x: number;
-    y: number;
-  };
-  type: string;
-  selectable: boolean;
-}
-
-interface BackgroundItem extends MapItem {
-  type: 'background';
-  src: string;
-}
-
-interface PinItem extends MapItem {
-  type: 'pin';
-  src: string;
-}
-
-interface TextItem extends MapItem {
-  type: 'pin';
-  text: string;
-}
-
-interface CharacterItem extends MapItem {
-  type: 'pin';
-  character: Character;
-}
+import {
+  Character,
+  Attribute,
+  MapItem,
+  BackgroundItem,
+  PinItem,
+  TextItem,
+  CharacterItem,
+} from 'trpg-common';
 
 const RoomCanvas: React.FC = () => {
   const itemMenuId = 'transformable-item-menu';
@@ -71,7 +45,7 @@ const RoomCanvas: React.FC = () => {
   const origPos = useRef({ x: 0, y: 0 });
   const setSelectedItem = useSetAtom(selectionAtom);
 
-  const [sceneItems, setSceneItems] = useState(new Map<string, MapItem>());
+  const state = useSyncedStore(store);
 
   const { show } = useContextMenu({
     id: canvasMenuId,
@@ -84,13 +58,14 @@ const RoomCanvas: React.FC = () => {
     });
   };
 
-  const renderItems = (items: Map<string, MapItem>) => {
-    return Array.from(items.entries()).map(([key, value]) => {
+  const renderItems = (items: { [id: string]: MapItem }) => {
+    return Object.entries(items).map(([key, value]) => {
       switch (value.type) {
         case 'background': {
           const item = value as BackgroundItem;
           return (
             <BackgroundItemComponent
+              key={key}
               itemId={key}
               position={item.position}
               rotation={item.rotation}
@@ -104,6 +79,7 @@ const RoomCanvas: React.FC = () => {
           const item = value as PinItem;
           return (
             <PinItemComponent
+              key={key}
               itemId={key}
               position={item.position}
               rotation={item.rotation}
@@ -117,6 +93,7 @@ const RoomCanvas: React.FC = () => {
           const item = value as TextItem;
           return (
             <TextItemComponent
+              key={key}
               itemId={key}
               position={item.position}
               rotation={item.rotation}
@@ -130,6 +107,7 @@ const RoomCanvas: React.FC = () => {
           const item = value as CharacterItem;
           return (
             <CharacterItemComponent
+              key={key}
               itemId={key}
               position={item.position}
               rotation={item.rotation}
@@ -213,88 +191,67 @@ const RoomCanvas: React.FC = () => {
     });
   }, []);
 
-  const handleItemMenuClick = useCallback((params: ItemParams) => {
-    const uuid = params.props.id;
-    switch (params.data.id) {
-      case 'selectable':
-        setSceneItems((prevItems) => {
-          const item = prevItems.get(uuid);
-          if (item) {
-            item.selectable = !item.selectable;
-            prevItems.set(uuid, item);
-          }
-          return new Map(prevItems);
-        });
-        break;
-      case 'delete':
-        setSceneItems((prevItems) => {
-          prevItems.delete(uuid);
-          return new Map(prevItems);
-        });
-        break;
-      case 'duplicate':
-        setSceneItems((prevItems) => {
-          const item = prevItems.get(uuid);
-          if (item) {
-            const newKey = uuidv4().toString();
-            const newItem = { ...item, id: newKey };
-            prevItems.set(newKey, newItem);
-          }
-          return new Map(prevItems);
-        });
-        break;
-      case 'edit':
-        break;
-      default:
-        break;
-    }
-  }, []);
+  const handleItemMenuClick = useCallback(
+    (params: ItemParams) => {
+      const uuid = params.props.id;
+      if (!state?.mapItems[uuid]) return;
+      const item = state.mapItems[uuid];
+      switch (params.data.id) {
+        case 'selectable':
+          state.mapItems[uuid].selectable = !state.mapItems[uuid].selectable;
+          break;
+        case 'delete':
+          delete state.mapItems[uuid];
+          break;
+        case 'duplicate':
+          const newKey = uuidv4().toString();
+          state.mapItems[newKey] = { ...item, id: newKey };
+          break;
+        case 'edit':
+          break;
+        default:
+          break;
+      }
+    },
+    [state]
+  );
 
-  const handleCanvasMenuClick = useCallback((params: ItemParams) => {
-    const uuid = uuidv4().toString();
-    switch (params.data.id) {
-      case 'add-text':
-        setSceneItems((prevItems) => {
-          prevItems.set(uuid, {
+  const handleCanvasMenuClick = useCallback(
+    (params: ItemParams) => {
+      const uuid = uuidv4().toString();
+      switch (params.data.id) {
+        case 'add-text':
+          state.mapItems[uuid] = {
             id: uuid,
             position: { x: 0, y: 0 },
             rotation: 0,
             scale: { x: 1, y: 1 },
             type: 'text',
             text: 'Default Text',
-          });
-          return new Map(prevItems);
-        });
-        break;
-      case 'add-background':
-        setSceneItems((prevItems) => {
-          prevItems.set(uuid, {
+          };
+          break;
+        case 'add-background':
+          state.mapItems[uuid] = {
             id: uuid,
             position: { x: 0, y: 0 },
             rotation: 0,
             scale: { x: 1, y: 1 },
             type: 'background',
             src: '/map.jpg',
-          });
-          return new Map(prevItems);
-        });
-        break;
-      case 'add-pin':
-        setSceneItems((prevItems) => {
-          prevItems.set(uuid, {
+          };
+          break;
+        case 'add-pin':
+          state.mapItems[uuid] = {
             id: uuid,
             position: { x: 0, y: 0 },
             rotation: 0,
             scale: { x: 1, y: 1 },
             type: 'pin',
             src: '/map.jpg',
-          });
-          return new Map(prevItems);
-        });
-        break;
-      case 'add-character':
-        setSceneItems((prevItems) => {
-          prevItems.set(uuid, {
+          };
+          break;
+        case 'add-character':
+          state.mapItems[uuid] = {
             id: uuid,
             position: { x: 0, y: 0 },
             rotation: 0,
@@ -315,14 +272,14 @@ const RoomCanvas: React.FC = () => {
               }),
               '/map.jpg'
             ),
-          });
-          return new Map(prevItems);
-        });
-        break;
-      default:
-        break;
-    }
-  }, []);
+          };
+          break;
+        default:
+          break;
+      }
+    },
+    [state]
+  );
 
   return (
     <>
@@ -345,7 +302,7 @@ const RoomCanvas: React.FC = () => {
             transformOrigin: 'center',
           }}
         >
-          {renderItems(sceneItems)}
+          {renderItems(state.mapItems || {})}
         </div>
       </div>
       <Menu id={itemMenuId}>

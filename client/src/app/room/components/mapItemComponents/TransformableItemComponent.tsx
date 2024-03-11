@@ -1,22 +1,23 @@
-"use client";
+'use client';
 
-import { useAtom, useAtomValue } from "jotai";
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { scaleAtom, selectionAtom } from "../../store";
-import clsx from "clsx";
+import { useAtom, useAtomValue } from 'jotai';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { scaleAtom, selectionAtom, store } from '../../store';
+import clsx from 'clsx';
 
-import { useContextMenu } from "react-contexify";
-import "react-contexify/dist/ReactContexify.css";
+import { useContextMenu } from 'react-contexify';
+import 'react-contexify/dist/ReactContexify.css';
+import { useSyncedStore } from '@syncedstore/react';
 
 type HandlePosition =
-  | "top-left"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-right"
-  | "top-center"
-  | "bottom-center"
-  | "left-center"
-  | "right-center";
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'top-center'
+  | 'bottom-center'
+  | 'left-center'
+  | 'right-center';
 
 interface ScaleHandleProps {
   position: HandlePosition;
@@ -25,16 +26,16 @@ interface ScaleHandleProps {
 }
 
 const getPositionClass = (position: HandlePosition) => {
-  let result = "";
-  if (position.includes("top")) result += "top-0 -translate-y-1/2 ";
-  if (position.includes("bottom")) result += "bottom-0 translate-y-1/2 ";
-  if (position.includes("left")) result += "left-0 -translate-x-1/2 ";
-  if (position.includes("right")) result += "right-0 translate-x-1/2 ";
-  if (position.includes("center")) {
-    if (position.startsWith("top") || position.startsWith("bottom")) {
-      result += "left-1/2 -translate-x-1/2 ";
-    } else if (position.startsWith("left") || position.startsWith("right")) {
-      result += "top-1/2 -translate-y-1/2 ";
+  let result = '';
+  if (position.includes('top')) result += 'top-0 -translate-y-1/2 ';
+  if (position.includes('bottom')) result += 'bottom-0 translate-y-1/2 ';
+  if (position.includes('left')) result += 'left-0 -translate-x-1/2 ';
+  if (position.includes('right')) result += 'right-0 translate-x-1/2 ';
+  if (position.includes('center')) {
+    if (position.startsWith('top') || position.startsWith('bottom')) {
+      result += 'left-1/2 -translate-x-1/2 ';
+    } else if (position.startsWith('left') || position.startsWith('right')) {
+      result += 'top-1/2 -translate-y-1/2 ';
     }
   }
 
@@ -82,9 +83,10 @@ interface TransformHandlesProps {
 
 const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, scale }) => {
   return (
-    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
       <ScaleHandle
         handler={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onScale(e.clientX, e.clientY);
         }}
@@ -93,6 +95,7 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
       />
       <ScaleHandle
         handler={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onScale(e.clientX, e.clientY);
         }}
@@ -101,6 +104,7 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
       />
       <ScaleHandle
         handler={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onScale(e.clientX, e.clientY);
         }}
@@ -109,6 +113,7 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
       />
       <ScaleHandle
         handler={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onScale(e.clientX, e.clientY);
         }}
@@ -117,6 +122,7 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
       />
       <ScaleHandle
         handler={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onScale(e.clientX, e.clientY);
         }}
@@ -125,6 +131,7 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
       />
       <ScaleHandle
         handler={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onScale(e.clientX, e.clientY);
         }}
@@ -133,6 +140,7 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
       />
       <ScaleHandle
         handler={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onScale(e.clientX, e.clientY);
         }}
@@ -141,6 +149,7 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
       />
       <ScaleHandle
         handler={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onScale(e.clientX, e.clientY);
         }}
@@ -149,6 +158,7 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
       />
       <RotateHandle
         handler={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onRotate(e.clientX, e.clientY);
         }}
@@ -167,15 +177,14 @@ interface TransformableProps {
   selectable: boolean;
 }
 
-const TransformableItem: React.FC<TransformableProps> = ({ children, itemId, selectable, position, rotation, scale }) => {
-  const MENU_ID = "transformable-item-menu";
+const TransformableItem: React.FC<TransformableProps> = ({ children, itemId }) => {
+  const MENU_ID = 'transformable-item-menu';
   const [selectedItem, setSelectedItem] = useAtom(selectionAtom);
   const canvasScale = useAtomValue(scaleAtom);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [rotation, setRotation] = useState(0);
-  const [scale, setScale] = useState({ x: 1, y: 1 });
   const [showHandles, setShowHandles] = useState(false);
   const transformRef = useRef<HTMLDivElement>(null);
+
+  const state = useSyncedStore(store);
 
   const { show } = useContextMenu({
     id: MENU_ID,
@@ -197,7 +206,12 @@ const TransformableItem: React.FC<TransformableProps> = ({ children, itemId, sel
 
   const handleScale = useCallback(
     (clientX: number, clientY: number) => {
-      const origScale = scale;
+      if (!state.mapItems?.[itemId]) return;
+
+      const origScale = {
+        x: state.mapItems?.[itemId]?.scale.x,
+        y: state.mapItems?.[itemId]?.scale.y
+      };
 
       const box = transformRef.current?.getBoundingClientRect() || {
         left: 0,
@@ -213,30 +227,40 @@ const TransformableItem: React.FC<TransformableProps> = ({ children, itemId, sel
 
       const onMouseMove = (e: MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         const dx = e.clientX - xCenter;
         const dy = e.clientY - yCenter;
         if (e.shiftKey) {
-          setScale({ x: (origScale.x * dx) / origXDist, y: (origScale.y * dy) / origYDist });
+          state.mapItems[itemId].scale = {
+            x: (origScale.x * dx) / origXDist,
+            y: (origScale.y * dy) / origYDist,
+          };
         } else {
           const dd = Math.sqrt(dx ** 2 + dy ** 2);
-          setScale({ x: (origScale.x * dd) / origDist, y: (origScale.y * dd) / origDist });
+          state.mapItems[itemId].scale = {
+            x: (origScale.x * dd) / origDist,
+            y: (origScale.y * dd) / origDist,
+          };
         }
       };
 
       const onMouseUp = () => {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
       };
 
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     },
-    [scale]
+    [itemId, state]
   );
 
   const handleRotate = useCallback(
     (clientX: number, clientY: number) => {
-      const origRotation = rotation;
+      if (!state.mapItems?.[itemId]) return;
+
+      const origRotation = state.mapItems?.[itemId]?.rotation;
+
       const box = transformRef.current?.getBoundingClientRect() || {
         left: 0,
         right: 0,
@@ -253,25 +277,27 @@ const TransformableItem: React.FC<TransformableProps> = ({ children, itemId, sel
       const onMouseMove = (e: MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
         const currentAngle =
           Math.atan2(e.clientY - position.y, e.clientX - position.x) * (180 / Math.PI);
         const targetAngle = origRotation + currentAngle - startRotation;
+
         if (e.shiftKey) {
-          setRotation(targetAngle - (targetAngle % 15));
+          state.mapItems[itemId].rotation = targetAngle - (targetAngle % 15);
         } else {
-          setRotation(targetAngle);
+          state.mapItems[itemId].rotation = targetAngle;
         }
       };
 
       const onMouseUp = () => {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
       };
 
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     },
-    [rotation]
+    [itemId, state]
   );
 
   const handleMouseDown = useCallback(
@@ -281,34 +307,43 @@ const TransformableItem: React.FC<TransformableProps> = ({ children, itemId, sel
 
       setSelectedItem([itemId]);
 
+      if (!state.mapItems?.[itemId]) return;
+
+      const origPos = {
+        x: state.mapItems?.[itemId]?.position.x,
+        y: state.mapItems?.[itemId]?.position.y
+      };
+
       const startPos = { x: event.clientX, y: event.clientY };
-      const origPos = { x: position.x, y: position.y };
 
       const onMouseMove = (e: MouseEvent) => {
-        e.preventDefault();
+        event.preventDefault();
+        event.stopPropagation();
         const dx = e.clientX - startPos.x;
         const dy = e.clientY - startPos.y;
-        setPosition({
+
+        state.mapItems[itemId].position = {
           x: origPos.x + dx / canvasScale,
           y: origPos.y + dy / canvasScale,
-        });
+        };
       };
 
       const onMouseUp = () => {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
       };
 
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     },
-    [position, canvasScale, setSelectedItem, itemId]
+    [canvasScale, itemId, setSelectedItem, state]
   );
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    if (selectable) {
+
+    if (state.mapItems?.[itemId].selectable) {
       setSelectedItem([itemId]);
     }
   };
@@ -318,18 +353,22 @@ const TransformableItem: React.FC<TransformableProps> = ({ children, itemId, sel
       <div
         onContextMenu={displayMenu}
         ref={transformRef}
-        className={clsx("cursor-grab", "absolute", "inline-block", {
-          "border border-dashed border-sky-500": showHandles,
+        className={clsx('cursor-grab', 'absolute', 'inline-block', {
+          'border border-dashed border-sky-500': showHandles,
         })}
         style={{
-          transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale.x}, ${scale.y})`,
+          transform: `translate(${state.mapItems?.[itemId].position.x}px, ${state.mapItems?.[itemId].position.y}px) rotate(${state.mapItems?.[itemId].rotation}deg) scale(${state.mapItems?.[itemId].scale.x}, ${state.mapItems?.[itemId].scale.y})`,
         }}
         onMouseDown={handleMouseDown}
         onClick={handleClick}
       >
-        <div style={{ width: "100px" }}>{children}</div>
+        <div style={{ width: '100px' }}>{children}</div>
         {showHandles && (
-          <TransformHandles onScale={handleScale} onRotate={handleRotate} scale={scale} />
+          <TransformHandles
+            onScale={handleScale}
+            onRotate={handleRotate}
+            scale={state.mapItems?.[itemId].scale || { x: 1, y: 1 }}
+          />
         )}
       </div>
     </>
