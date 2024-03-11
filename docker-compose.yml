@@ -7,6 +7,7 @@ services:
       - ./client:/app
       - /app/node_modules
       - ./common:/common
+      - ./client/node_modules/trpg-common:/app/node_modules/trpg-common
     ports:
       - "3000:3000"
     environment:

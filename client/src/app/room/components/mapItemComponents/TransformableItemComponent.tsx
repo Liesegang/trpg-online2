@@ -2,8 +2,11 @@
 
 import { useAtom, useAtomValue } from "jotai";
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { scaleAtom, selectionAtom } from "../Store";
+import { scaleAtom, selectionAtom } from "../../Store";
 import clsx from "clsx";
+
+import { useContextMenu } from "react-contexify";
+import "react-contexify/dist/ReactContexify.css";
 
 type HandlePosition =
   | "top-left"
@@ -18,7 +21,7 @@ type HandlePosition =
 interface ScaleHandleProps {
   position: HandlePosition;
   handler: (event: React.MouseEvent<HTMLDivElement>) => void;
-  scale: number;
+  scale: { x: number; y: number };
 }
 
 const getPositionClass = (position: HandlePosition) => {
@@ -46,7 +49,7 @@ const ScaleHandle: React.FC<ScaleHandleProps> = ({ position, handler, scale }) =
     >
       <div
         className="w-2 h-2 border-1 border-white rounded-full bg-green-500"
-        style={{ transform: `scale(${1 / scale}` }}
+        style={{ transform: `scale(${1 / scale.x}, ${1 / scale.y}` }}
       />
     </div>
   );
@@ -54,7 +57,7 @@ const ScaleHandle: React.FC<ScaleHandleProps> = ({ position, handler, scale }) =
 
 interface RotationHandleProps {
   handler: (event: React.MouseEvent<HTMLDivElement>) => void;
-  scale: number;
+  scale: { x: number; y: number };
 }
 
 const RotateHandle: React.FC<RotationHandleProps> = ({ handler, scale }) => {
@@ -65,7 +68,7 @@ const RotateHandle: React.FC<RotationHandleProps> = ({ handler, scale }) => {
     >
       <div
         className="w-2 h-2 border-1 border-white rounded-full bg-red-500"
-        style={{ transform: `scale(${1 / scale}` }}
+        style={{ transform: `scale(${1 / scale.x}, ${1 / scale.y}` }}
       />
     </div>
   );
@@ -74,7 +77,7 @@ const RotateHandle: React.FC<RotationHandleProps> = ({ handler, scale }) => {
 interface TransformHandlesProps {
   onScale: (clientX: number, clientY: number) => void;
   onRotate: (clientX: number, clientY: number) => void;
-  scale: number;
+  scale: { x: number; y: number };
 }
 
 const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, scale }) => {
@@ -158,20 +161,35 @@ const TransformHandles: React.FC<TransformHandlesProps> = ({ onScale, onRotate, 
 interface TransformableProps {
   children: React.ReactNode;
   itemId: string;
+  position: { x: number; y: number };
+  rotation: number;
+  scale: { x: number; y: number };
+  selectable: boolean;
 }
 
-const TransformableItem: React.FC<TransformableProps> = ({ children, itemId }) => {
+const TransformableItem: React.FC<TransformableProps> = ({ children, itemId, selectable, position, rotation, scale }) => {
+  const MENU_ID = "transformable-item-menu";
   const [selectedItem, setSelectedItem] = useAtom(selectionAtom);
   const canvasScale = useAtomValue(scaleAtom);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState({ x: 1, y: 1 });
   const [showHandles, setShowHandles] = useState(false);
   const transformRef = useRef<HTMLDivElement>(null);
 
-  const toggleHandles = useCallback(() => {
-    setSelectedItem([itemId]);
-  }, [itemId, setSelectedItem]);
+  const { show } = useContextMenu({
+    id: MENU_ID,
+  });
+
+  const displayMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    show({
+      id: MENU_ID,
+      event: e,
+      props: { id: itemId },
+    });
+  };
 
   useEffect(() => {
     setShowHandles(selectedItem.includes(itemId));
@@ -180,6 +198,7 @@ const TransformableItem: React.FC<TransformableProps> = ({ children, itemId }) =
   const handleScale = useCallback(
     (clientX: number, clientY: number) => {
       const origScale = scale;
+
       const box = transformRef.current?.getBoundingClientRect() || {
         left: 0,
         right: 0,
@@ -188,14 +207,20 @@ const TransformableItem: React.FC<TransformableProps> = ({ children, itemId }) =
       };
       const xCenter = (box.left + box.right) / 2;
       const yCenter = (box.top + box.bottom) / 2;
-      const origDistance = Math.sqrt((clientX - xCenter) ** 2 + (clientY - yCenter) ** 2);
+      const origXDist = clientX - xCenter;
+      const origYDist = clientY - yCenter;
+      const origDist = Math.sqrt(origXDist ** 2 + origYDist ** 2);
 
       const onMouseMove = (e: MouseEvent) => {
         e.preventDefault();
         const dx = e.clientX - xCenter;
         const dy = e.clientY - yCenter;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        setScale(origScale * (distance / origDistance));
+        if (e.shiftKey) {
+          setScale({ x: (origScale.x * dx) / origXDist, y: (origScale.y * dy) / origYDist });
+        } else {
+          const dd = Math.sqrt(dx ** 2 + dy ** 2);
+          setScale({ x: (origScale.x * dd) / origDist, y: (origScale.y * dd) / origDist });
+        }
       };
 
       const onMouseUp = () => {
@@ -283,29 +308,31 @@ const TransformableItem: React.FC<TransformableProps> = ({ children, itemId }) =
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    setSelectedItem([itemId]);
+    if (selectable) {
+      setSelectedItem([itemId]);
+    }
   };
 
   return (
-    <div
-      ref={transformRef}
-      className={clsx("cursor-grab", "absolute", "inline-block", {
-        "border border-dashed border-sky-500": showHandles,
-      })}
-      style={{
-        transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale})`,
-      }}
-      onMouseDown={handleMouseDown}
-      onClick={handleClick}
-    >
-      <div>{children}</div>
-      {showHandles && (
-        <TransformHandles onScale={handleScale} onRotate={handleRotate} scale={scale} />
-      )}
-      <div>
-        {position.x}, {position.y}, {rotation}, {scale}
+    <>
+      <div
+        onContextMenu={displayMenu}
+        ref={transformRef}
+        className={clsx("cursor-grab", "absolute", "inline-block", {
+          "border border-dashed border-sky-500": showHandles,
+        })}
+        style={{
+          transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale.x}, ${scale.y})`,
+        }}
+        onMouseDown={handleMouseDown}
+        onClick={handleClick}
+      >
+        <div style={{ width: "100px" }}>{children}</div>
+        {showHandles && (
+          <TransformHandles onScale={handleScale} onRotate={handleRotate} scale={scale} />
+        )}
       </div>
-    </div>
+    </>
   );
 };
 

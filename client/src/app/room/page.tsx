@@ -5,7 +5,6 @@ import { DockMode } from "rc-dock";
 import "rc-dock/dist/rc-dock.css";
 
 import RoomCanvas from "./components/RoomCanvas";
-import TransformableItem from "./components/TransformableItem";
 import ChatWindow from "./components/ChatWindow";
 import TerminalWindow from "./components/TerminalWindow";
 
@@ -22,14 +21,7 @@ const defaultLayout = {
                 id: "main",
                 title: "main",
                 content: (
-                  <RoomCanvas>
-                    <TransformableItem itemId="1">
-                      <p>Item 1</p>
-                    </TransformableItem>
-                    <TransformableItem itemId="2">
-                      <p>Item 2</p>
-                    </TransformableItem>
-                  </RoomCanvas>
+                  <RoomCanvas />
                 ),
               },
             ],

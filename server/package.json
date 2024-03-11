@@ -1,8 +1,11 @@
 {
   "name": "trpg-server",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Server application for TRPG Online",
+  "author": {
+    "name": "liesegang",
+    "email": "yyama0704@gmail.com"
+  },
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -31,7 +34,9 @@
     "rxjs": "^7.2.0",
     "socket.io": "^4.7.4",
     "swagger-ui-express": "^5.0.0",
-    "trpg-common": "file:../common"
+    "trpg-common": "file:../common",
+    "y-websocket": "^1.5.4",
+    "yjs": "^13.6.14"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.3.2",

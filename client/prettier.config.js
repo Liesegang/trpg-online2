@@ -3,7 +3,7 @@ module.exports = {
   tabWidth: 2,
   useTabs: false,
   semi: true,
-  singleQuote: false,
+  singleQuote: true,
   quoteProps: "as-needed",
   jsxSingleQuote: false,
   trailingComma: "es5",
@@ -14,4 +14,4 @@ module.exports = {
   htmlWhitespaceSensitivity: "css",
   endOfLine: "lf",
   embeddedLanguageFormatting: "off",
-}
+};

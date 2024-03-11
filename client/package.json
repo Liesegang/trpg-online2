@@ -1,7 +1,7 @@
 {
-  "name": "trpg-online2",
+  "name": "trpg-online",
   "version": "0.1.0",
-  "private": true,
+  "description": "Client application for TRPG Online",
   "scripts": {
     "dev": "WATCHPACK_POLLING=true next dev",
     "build": "next build",
@@ -16,16 +16,23 @@
     "preline": "^2.0.3",
     "rc-dock": "^3.2.19",
     "react": "^18",
+    "react-contexify": "^6.0.0",
     "react-dom": "^18",
+    "react-icons": "^5.0.1",
     "react-mosaic-component": "^6.1.0",
     "react-syntax-highlighter": "^15.5.0",
     "socket.io-client": "^4.7.4",
-    "trpg-common": "file:../common"
+    "trpg-common": "file:../trpg-common",
+    "uuid": "^9.0.1",
+    "y-websocket": "^1.5.4",
+    "yjs": "^13.6.14"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/uuid": "^9.0.8",
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "14.1.2",
@@ -34,5 +41,9 @@
     "prettier": "^3.2.5",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
+  },
+  "author": {
+    "name": "liesegang",
+    "email": "yyama0704@gmail.com"
   }
 }
