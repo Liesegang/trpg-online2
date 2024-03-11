@@ -2,7 +2,7 @@
 
 import { useAtom, useAtomValue } from "jotai";
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { scaleAtom, selectionAtom } from "../../Store";
+import { scaleAtom, selectionAtom } from "../../store";
 import clsx from "clsx";
 
 import { useContextMenu } from "react-contexify";

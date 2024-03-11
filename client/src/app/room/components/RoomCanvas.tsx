@@ -18,7 +18,7 @@ import {
 } from 'react-icons/md';
 import { IoDuplicateOutline } from 'react-icons/io5';
 
-import { scaleAtom, selectionAtom } from '../Store';
+import { scaleAtom, selectionAtom } from '../store';
 import TextItemComponent from './MapItemComponents/TextItemComponent';
 import CharacterItemComponent from './MapItemComponents/CharacterItemComponent';
 import BackgroundItemComponent from './MapItemComponents/BackgroundItemComponent';
